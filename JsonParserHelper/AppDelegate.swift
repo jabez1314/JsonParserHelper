@@ -14,7 +14,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 
     func applicationDidFinishLaunching(aNotification: NSNotification) {
-        // Insert code here to initialize your application
+
+        var parser = SimpleJsonParser();
+        var str = NSBundle.mainBundle().pathForResource("test", ofType: "json");
+        parser.parsejson(str!);
+//        var str = parser.propertyName("hello_hsss");
+//        println("str: " + str);
     }
 
     func applicationWillTerminate(aNotification: NSNotification) {

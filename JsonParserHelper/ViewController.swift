@@ -13,15 +13,12 @@ class ViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
+//        var object: NSObject = NSObject()
+        
+//        JsonParser.parserRootObject(object)
     }
 
-    override var representedObject: AnyObject? {
-        didSet {
-        // Update the view, if already loaded.
-        }
-    }
-
+    
 
 }
 
