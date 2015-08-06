@@ -13,13 +13,22 @@ class SimpleJsonParser: NSObject {
     var propertyList = NSMutableArray();
     var parseList = NSMutableArray();
     
+    var left: String;
+    var right: String;
+    
+    init(left: String, right: String) {
+        self.left = left;
+        self.right = right;
+        super.init();
+    }
+    
     func parsejson(filePath: String) {
         var data = NSData(contentsOfFile: filePath);
         if (nil == data || data?.length == 0) {
             return
         }
         
-        var obj = NSJSONSerialization .JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments, error: nil);
+        var obj: AnyObject? = NSJSONSerialization .JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments, error: nil);
         if nil == obj {
             return
         }
@@ -35,6 +44,50 @@ class SimpleJsonParser: NSObject {
         printArray(propertyList);
         printArray(parseList);
     }
+    
+    func parseJsongWithString(source: String, left: String, right: String) -> (NSError?, String) {
+        
+        assert(source.lengthOfBytesUsingEncoding(NSUTF8StringEncoding) > 0, "source ok");
+        assert(left.lengthOfBytesUsingEncoding(NSUTF8StringEncoding) > 0, "left ok");
+        assert(right.lengthOfBytesUsingEncoding(NSUTF8StringEncoding) > 0, "right ok");
+        
+        self.left = left;
+        self.right = right;
+        
+        return parseJsonWithString(source);
+    }
+    
+    func parseJsonWithString(source: String) -> (NSError?, String) {
+        
+        assert(source.lengthOfBytesUsingEncoding(NSUTF8StringEncoding) > 0, "source ok");
+        
+        var error = NSError(domain: "ba json data", code: -1, userInfo: nil);
+        var data = source.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: true);
+        if (nil == data || data?.length == 0) {
+            return (error, "bad json data")
+        }
+        
+        var obj: AnyObject? = NSJSONSerialization .JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments, error: nil);
+        if nil == obj {
+            return (error, "bad json data")
+        }
+        
+        var object: NSObject = obj as! NSObject;
+        
+        if object.isKindOfClass(NSDictionary) {
+            parseDict(object as! NSDictionary);
+        } else if object.isKindOfClass(NSArray) {
+            parseArray(object as! NSArray);
+        }
+        
+        var results = "";
+        results += stringFromArray(propertyList);
+        results += stringFromArray(parseList);
+        
+        return (nil, results)
+    }
+
+    
     
     func parseArray(array: NSArray) {
         
@@ -94,10 +147,26 @@ class SimpleJsonParser: NSObject {
         var name = propertyName(str)
         var property = "@property (strong, nonatomic) NSString *" + name  + ";"
         
-        var sign = "song." + name + " = data[@\"" + str + "\"];";
+        var sign = self.left +  "." + name + spaceStringFromName(name) + " = " + self.right + "[@\"" + str + "\"];";
         
         propertyList.addObject(property);
         parseList.addObject(sign);
+    }
+    
+    func spaceStringFromName(name: String) -> String {
+        var len = (left + "." + name).lengthOfBytesUsingEncoding(NSUTF8StringEncoding);
+    
+        var count = len / 7;
+        if len % 7 == 0  {
+            count -= 1;
+        }
+        
+        len = 4 - count;
+        var result = "";
+        for (var i = 0; i < len; i++) {
+            result += "\t"
+        }
+        return result;
     }
     
     func propertyName(name: String) -> String {
@@ -147,5 +216,19 @@ class SimpleJsonParser: NSObject {
         }
         
         println("\n\n------------------\n\n");
+    }
+    
+    func stringFromArray(array: NSArray) -> String {
+        
+        var results = "";
+        
+        for str in array {
+            results += str as! String;
+            results += "\n"
+        }
+        
+        results += "\n\n---------------\n\n";
+        
+        return results;
     }
 }
